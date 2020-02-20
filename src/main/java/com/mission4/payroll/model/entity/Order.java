@@ -1,6 +1,8 @@
-package com.mission4.payroll;
+package com.mission4.payroll.model.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,13 +11,15 @@ import javax.persistence.Table;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "CUSTOMER_ORDER")
-class Order {
+public class Order {
     private @Id @GeneratedValue Long id;
     private String description;
-    private com.mission4.payroll.Status status;
+    private Status status;
 
-    Order() {}
+//    Order() {}\
 
     Order(String description, Status status) {
         this.description = description;

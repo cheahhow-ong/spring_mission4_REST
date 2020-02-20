@@ -1,7 +1,7 @@
-package com.mission4.payroll;
+package com.mission4.payroll.common;
 
 public class EmployeeNotFoundException extends RuntimeException {
-    EmployeeNotFoundException(Long id) {
+    public EmployeeNotFoundException(Long id) {
         super("Could not find employee " + id);
     }
 }

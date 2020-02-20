@@ -1,12 +1,14 @@
-package com.mission4.payroll;
+package com.mission4.payroll.model.entity;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
+import com.mission4.payroll.controller.OrderController;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 
 @Component
-class OrderModelAssembler implements RepresentationModelAssembler<Order, EntityModel<Order>> {
+public class OrderModelAssembler implements RepresentationModelAssembler<Order, EntityModel<Order>> {
 
     @Override
     public EntityModel<Order> toModel(Order order) {
@@ -28,3 +30,4 @@ class OrderModelAssembler implements RepresentationModelAssembler<Order, EntityM
         return orderModel;
     }
 }
+
