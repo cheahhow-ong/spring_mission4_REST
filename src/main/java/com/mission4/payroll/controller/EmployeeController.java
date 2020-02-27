@@ -1,86 +1,59 @@
 package com.mission4.payroll.controller;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
-
-import com.mission4.payroll.common.EmployeeNotFoundException;
-import com.mission4.payroll.model.entity.Employee;
-import com.mission4.payroll.model.entity.EmployeeModelAssembler;
-import com.mission4.payroll.repository.EmployeeRepository;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.IanaLinkRelations;
+import com.mission4.payroll.model.request.CreateEmployeeRequest;
+import com.mission4.payroll.model.request.UpdateEmployeeRequest;
+import com.mission4.payroll.model.response.*;
+import com.mission4.payroll.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.swing.text.html.parser.Entity;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class EmployeeController {
-    private final EmployeeRepository repository;
-    private final EmployeeModelAssembler assembler;
+    private GetEmployeeDetailsService getEmployeeDetailsService;
+    private GetAllEmployeeDetailsService getAllEmployeeDetailsService;
+    private CreateEmployeeService createEmployeeService;
+    private UpdateEmployeeService updateEmployeeService;
+    private DeleteEmployeeService deleteEmployeeService;
 
-    EmployeeController(EmployeeRepository repository,
-                       EmployeeModelAssembler assembler) {
-        this.repository = repository;
-        this.assembler = assembler;
+    public EmployeeController(GetEmployeeDetailsService getEmployeeDetailsService,
+                              GetAllEmployeeDetailsService getAllEmployeeDetailsService,
+                              CreateEmployeeService createEmployeeService,
+                              UpdateEmployeeService updateEmployeeService,
+                              DeleteEmployeeService deleteEmployeeService) {
+        this.getEmployeeDetailsService = getEmployeeDetailsService;
+        this.getAllEmployeeDetailsService = getAllEmployeeDetailsService;
+        this.createEmployeeService = createEmployeeService;
+        this.updateEmployeeService = updateEmployeeService;
+        this.deleteEmployeeService = deleteEmployeeService;
     }
 
     // Aggregate root
-
     @GetMapping("/employees")
-    public CollectionModel<EntityModel<Employee>> all() {
-        List<EntityModel<Employee>> employees = repository.findAll().stream()
-                .map(assembler::toModel)
-                .collect(Collectors.toList());
-        return new CollectionModel<>(employees,
-                linkTo(methodOn(EmployeeController.class).all()).withSelfRel());
+    public GetAllEmployeeResponse all() {
+        return getAllEmployeeDetailsService.execute();
     }
 
     @PostMapping("/employees")
-    public ResponseEntity<?> newEmployee(@RequestBody Employee newEmployee) throws URISyntaxException {
-        EntityModel<Employee> entityModel = assembler.toModel(repository.save(newEmployee));
-
-        return ResponseEntity
-                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
-                .body(entityModel);
+    public CreateEmployeeResponse newEmployee(@RequestBody CreateEmployeeRequest createEmployeeRequest) throws URISyntaxException {
+        return createEmployeeService.execute(createEmployeeRequest);
     }
 
     // Single item
     @GetMapping("/employees/{id}")
-    public EntityModel<Employee> one(@PathVariable Long id) {
-        Employee employee = repository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException(id));
-
-        return assembler.toModel(employee);
+    public GetEmployeeResponse one(@PathVariable Long id) {
+        return getEmployeeDetailsService.execute(id);
     }
 
     @PutMapping("/employees/{id}")
-    public ResponseEntity<?> replaceEmployee(@RequestBody Employee newEmployee,
-                                      @PathVariable Long id) throws URISyntaxException {
-        Employee updatedEmployee = repository.findById(id)
-                .map(employee -> {
-                    employee.setName(newEmployee.getName());
-                    employee.setRole(newEmployee.getRole());
-                    return repository.save(employee);
-                })
-                .orElseGet(() -> {
-                    newEmployee.setId(id);
-                    return repository.save(newEmployee);
-                });
-
-        EntityModel<Employee> entityModel = assembler.toModel(updatedEmployee);
-
-        return ResponseEntity
-                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
-                .body(entityModel);
+    public UpdateEmployeeResponse replaceEmployee(@RequestBody UpdateEmployeeRequest updateEmployeeRequest,
+                                                  @PathVariable Long id) throws URISyntaxException {
+        return updateEmployeeService.execute(updateEmployeeRequest, id);
     }
 
     @DeleteMapping("/employees/{id}")
-    public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
-        repository.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> deleteEmployee(@PathVariable Long id) {
+        return deleteEmployeeService.execute(id);
     }
 }
